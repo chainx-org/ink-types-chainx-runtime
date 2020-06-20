@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with ink!.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::{AccountId, Balance, ChainXRuntimeTypes};
 use ink_core::env::EnvTypes;
 use scale::{Codec, Decode, Encode};
-use pallet_indices::address::Address;
 use sp_runtime::traits::Member;
-use crate::{AccountId, AccountIndex, Balance, NodeRuntimeTypes};
 
 /// Default runtime Call type, a subset of the runtime Call module variants
 ///
@@ -26,68 +25,90 @@ use crate::{AccountId, AccountIndex, Balance, NodeRuntimeTypes};
 #[derive(Encode, Decode)]
 #[cfg_attr(feature = "std", derive(Clone, PartialEq, Eq))]
 pub enum Call {
-    #[codec(index = "6")]
-    Balances(Balances<NodeRuntimeTypes, AccountIndex>),
+    #[codec(index = "5")]
+    XAssets(XAssets<ChainXRuntimeTypes>),
+    #[codec(index = "7")]
+    XContracts(XContracts<ChainXRuntimeTypes>),
 }
 
-impl From<Balances<NodeRuntimeTypes, AccountIndex>> for Call {
-    fn from(balances_call: Balances<NodeRuntimeTypes, AccountIndex>) -> Call {
-        Call::Balances(balances_call)
+impl From<XAssets<ChainXRuntimeTypes>> for Call {
+    fn from(assets_call: XAssets<ChainXRuntimeTypes>) -> Call {
+        Call::XAssets(assets_call)
     }
 }
+
+impl From<XContracts<ChainXRuntimeTypes>> for Call {
+    fn from(contracts_call: XContracts<ChainXRuntimeTypes>) -> Call {
+        Call::XContracts(contracts_call)
+    }
+}
+
+type Token = Vec<u8>;
+type Memo = Vec<u8>;
+
 /// Generic Balance Call, could be used with other runtimes
 #[derive(Encode, Decode, Clone, PartialEq, Eq)]
-pub enum Balances<T, AccountIndex>
+pub enum XAssets<T>
 where
     T: EnvTypes,
     T::AccountId: Member + Codec,
-    AccountIndex: Member + Codec,
 {
     #[allow(non_camel_case_types)]
-    transfer(Address<T::AccountId, AccountIndex>, #[codec(compact)] T::Balance),
-    #[allow(non_camel_case_types)]
-    set_balance(
-        Address<T::AccountId, AccountIndex>,
-        #[codec(compact)] T::Balance,
-        #[codec(compact)] T::Balance,
-    ),
+    #[codec(index = "3")]
+    transfer(T::AccountId, Token, #[codec(compact)] T::Balance, Memo),
 }
 
 /// Construct a `Balances::transfer` call
-pub fn transfer_balance(account: AccountId, balance: Balance) -> Call {
-    Balances::<NodeRuntimeTypes, AccountIndex>::transfer(account.into(), balance).into()
+pub fn transfer_balance(account: AccountId, token: Token, balance: Balance, memo: Memo) -> Call {
+    XAssets::<ChainXRuntimeTypes>::transfer(account, token, balance, memo).into()
+}
+
+/// Generic Balance Call, could be used with other runtimes
+#[derive(Encode, Decode, Clone, PartialEq, Eq)]
+pub enum XContracts<T>
+where
+    T: EnvTypes,
+{
+    #[allow(non_camel_case_types)]
+    #[codec(index = "6")]
+    convert_to_asset(T::AccountId, #[codec(compact)] T::Balance),
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{calls, AccountIndex, NodeRuntimeTypes};
     use super::Call;
+    use crate::{calls, ChainXRuntimeTypes};
 
-    use node_runtime::{self, Runtime};
-    use pallet_indices::address;
+    use chainx_runtime::{self, Runtime};
     use scale::{Decode, Encode};
-
+    use sp_core::crypto::AccountId32;
 
     #[test]
     fn call_balance_transfer() {
         let balance = 10_000;
-        let account_index = 0;
 
-        let contract_address = calls::Address::Index(account_index);
-        let contract_transfer =
-            calls::Balances::<NodeRuntimeTypes, AccountIndex>::transfer(contract_address, balance);
-        let contract_call = Call::Balances(contract_transfer);
+        let token = b"PCX".to_vec();
+        let memo = b"memo".to_vec();
 
-        let srml_address = address::Address::Index(account_index);
-        let srml_transfer = node_runtime::BalancesCall::<Runtime>::transfer(srml_address, balance);
-        let srml_call = node_runtime::Call::Balances(srml_transfer);
+        let contract_address: AccountId32 = [1u8; 32].into();
+        let contract_transfer = calls::XAssets::<ChainXRuntimeTypes>::transfer(
+            contract_address.clone().into(),
+            token.clone(),
+            balance,
+            memo.clone(),
+        );
+        let contract_call = Call::XAssets(contract_transfer);
+
+        let srml_address: AccountId32 = contract_address.into();
+        let srml_transfer = xassets::Call::<Runtime>::transfer(srml_address, token, balance, memo);
+        let srml_call = chainx_runtime::Call::XAssets(srml_transfer);
 
         let contract_call_encoded = contract_call.encode();
         let srml_call_encoded = srml_call.encode();
 
         assert_eq!(srml_call_encoded, contract_call_encoded);
 
-        let srml_call_decoded: node_runtime::Call =
+        let srml_call_decoded: chainx_runtime::Call =
             Decode::decode(&mut contract_call_encoded.as_slice())
                 .expect("Balances transfer call decodes to srml type");
         let srml_call_encoded = srml_call_decoded.encode();

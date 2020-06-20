@@ -24,17 +24,17 @@ use ink_core::env::Clear;
 use scale::{Decode, Encode};
 use sp_core::crypto::AccountId32;
 #[cfg(feature = "ink-generate-abi")]
-use type_metadata::{HasTypeId, HasTypeDef, Metadata, MetaType, TypeId, TypeDef, TypeIdArray};
+use type_metadata::{HasTypeDef, HasTypeId, MetaType, Metadata, TypeDef, TypeId, TypeIdArray};
 
 pub mod calls;
 
 /// Contract environment types defined in substrate node-runtime
 #[cfg_attr(feature = "ink-generate-abi", derive(Metadata))]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum NodeRuntimeTypes {}
+pub enum ChainXRuntimeTypes {}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Encode, Decode)]
-pub struct AccountId (AccountId32);
+pub struct AccountId(AccountId32);
 
 impl From<AccountId32> for AccountId {
     fn from(account: AccountId32) -> Self {
@@ -112,7 +112,7 @@ pub type AccountIndex = u32;
 /// The default timestamp type.
 pub type Timestamp = u64;
 
-impl ink_core::env::EnvTypes for NodeRuntimeTypes {
+impl ink_core::env::EnvTypes for ChainXRuntimeTypes {
     type AccountId = AccountId;
     type Balance = Balance;
     type Hash = Hash;
