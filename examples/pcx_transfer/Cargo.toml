@@ -1,5 +1,5 @@
 [package]
-name = "calls"
+name = "pcx_transfer"
 version = "0.1.0"
 authors = ["Parity Technologies <admin@parity.io>"]
 edition = "2018"
@@ -23,7 +23,7 @@ features = ["derive"]
 optional = true
 
 [lib]
-name = "calls"
+name = "pcx_transfer"
 path = "lib.rs"
 crate-type = [
 	# Used for normal contract Wasm blobs.

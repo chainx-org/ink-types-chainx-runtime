@@ -16,6 +16,7 @@
 
 use crate::{AccountId, Balance, ChainXRuntimeTypes};
 use ink_core::env::EnvTypes;
+use ink_prelude::vec::Vec;
 use scale::{Codec, Decode, Encode};
 use sp_runtime::traits::Member;
 
@@ -59,7 +60,7 @@ where
 }
 
 /// Construct a `Balances::transfer` call
-pub fn transfer_balance(account: AccountId, token: Token, balance: Balance, memo: Memo) -> Call {
+pub fn asset_transfer(account: AccountId, token: Token, balance: Balance, memo: Memo) -> Call {
     XAssets::<ChainXRuntimeTypes>::transfer(account, token, balance, memo).into()
 }
 

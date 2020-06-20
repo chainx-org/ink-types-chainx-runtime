@@ -18,9 +18,10 @@ mod calls {
 
         /// Dispatches a `transfer` call to the Balances srml module
         #[ink(message)]
-        fn balance_transfer(&self, dest: AccountId, value: Balance) {
+        fn pcx_transfer(&self, dest: AccountId, value: Balance) {
             // create the Balances::transfer Call
-            let transfer_call = runtime_calls::transfer_balance(dest, value);
+            let transfer_call =
+                runtime_calls::asset_transfer(dest, b"PCX".to_vec(), value, b"memo".to_vec());
             // dispatch the call to the runtime
             let result = self.env().invoke_runtime(&transfer_call);
 
@@ -43,7 +44,7 @@ mod calls {
             let calls = Calls::new();
             let alice = AccountId::from(AccountKeyring::Alice.to_account_id());
             // assert_eq!(calls.env().dispatched_calls().into_iter().count(), 0);
-            calls.balance_transfer(alice, 10000);
+            calls.pcx_transfer(alice, 10000);
             // assert_eq!(calls.env().dispatched_calls().into_iter().count(), 1);
         }
     }
