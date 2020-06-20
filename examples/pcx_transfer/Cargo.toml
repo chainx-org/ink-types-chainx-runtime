@@ -15,6 +15,8 @@ scale = { package = "parity-scale-codec", version = "1.3", default-features = fa
 sp-keyring = { git = "https://github.com/paritytech/substrate/", package = "sp-keyring", tag = "v2.0.0-rc3", optional = true }
 ink_types_node_runtime = { path = "../../", default-features = false }
 
+blake2-rfc = { version = "0.2.18", default-features = false }
+
 [dependencies.type-metadata]
 git = "https://github.com/type-metadata/type-metadata.git"
 rev = "02eae9f35c40c943b56af5b60616219f2b72b47d"
